@@ -102,7 +102,7 @@
                         <td class="p-3.5 font-mono text-slate-400">{{ $att->total_hours ? $att->total_hours . ' hrs' : '--' }}</td>
                         <td class="p-3.5">
                             <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider
-                                {{ $att->status === 'Present' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : ($att->status === 'Work from home' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : ($att->status === 'Half day' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20')) }}">
+                                {{ $att->status === 'Present' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : ($att->status === 'Work from home' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : ($att->status === 'Late' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : ($att->status === 'Half day' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'))) }}">
                                 {{ $att->status }}
                             </span>
                         </td>
@@ -196,8 +196,9 @@
                 <div class="h-11 rounded-xl p-1.5 flex flex-col justify-between border relative group transition duration-300
                     {{ $day['status'] === 'Present' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 
                       ($day['status'] === 'Work from home' ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' :
+                      ($day['status'] === 'Late' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' :
                       ($day['status'] === 'Half day' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
-                      ($day['status'] === 'Holiday' ? 'bg-slate-900 border-slate-800/60 text-slate-500' : 'bg-red-500/10 border-red-500/20 text-red-400'))) }}">
+                      ($day['status'] === 'Holiday' ? 'bg-slate-900 border-slate-800/60 text-slate-500' : 'bg-red-500/10 border-red-500/20 text-red-400')))) }}">
                     
                     <span class="text-xs font-bold leading-none">{{ $day['date']->day }}</span>
                     

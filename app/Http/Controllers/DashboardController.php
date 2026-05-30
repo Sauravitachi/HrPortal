@@ -37,9 +37,9 @@ class DashboardController extends Controller
     protected function adminDashboard(): View
     {
         $totalEmployees = Employee::where('employment_status', 'Active')->count();
-        
+
         $presentToday = Attendance::where('date', now()->toDateString())
-            ->whereIn('status', ['Present', 'Half day', 'Work from home'])
+            ->whereIn('status', ['Present', 'Half day', 'Work from home', 'Late'])
             ->count();
 
         $pendingLeaves = LeaveRequest::where('status', 'Pending')->count();
@@ -86,14 +86,14 @@ class DashboardController extends Controller
     {
         $employee = $user->employee;
 
-        if (!$employee) {
+        if (! $employee) {
             return view('dashboard', [
                 'noProfile' => true,
                 'totalEmployees' => 0,
                 'presentToday' => 0,
                 'pendingLeaves' => 0,
                 'activeJobs' => 0,
-                'payrollSpent' => 0
+                'payrollSpent' => 0,
             ]);
         }
 
@@ -114,7 +114,7 @@ class DashboardController extends Controller
                 ->where('status', 'Approved')
                 ->whereYear('start_date', $currentYear)
                 ->get()
-                ->sum(fn($req) => $req->getDurationInDays());
+                ->sum(fn ($req) => $req->getDurationInDays());
 
             $leaveBalances[] = [
                 'name' => $type->name,
@@ -128,7 +128,7 @@ class DashboardController extends Controller
         $totalDays = 30;
         $presentDays = Attendance::where('employee_id', $employee->id)
             ->where('date', '>=', now()->subDays($totalDays)->toDateString())
-            ->whereIn('status', ['Present', 'Half day', 'Work from home'])
+            ->whereIn('status', ['Present', 'Half day', 'Work from home', 'Late'])
             ->count();
         $attendancePercentage = $totalDays > 0 ? round(($presentDays / $totalDays) * 100) : 100;
 

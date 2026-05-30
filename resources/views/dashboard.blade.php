@@ -30,7 +30,13 @@
                 </form>
             </div>
             @else
-            <span class="text-xs text-slate-300">Checked in at <span class="font-mono text-indigo-400">{{ \Illuminate\Support\Carbon::parse($todayAttendance->check_in)->format('h:i A') }}</span></span>
+            <span class="text-xs text-slate-300 flex items-center gap-1.5">
+                Checked in at <span class="font-mono text-indigo-400 font-semibold">{{ \Illuminate\Support\Carbon::parse($todayAttendance->check_in)->format('h:i A') }}</span>
+                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider
+                    {{ $todayAttendance->status === 'Present' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : ($todayAttendance->status === 'Work from home' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : ($todayAttendance->status === 'Late' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : ($todayAttendance->status === 'Half day' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'))) }}">
+                    {{ $todayAttendance->status }}
+                </span>
+            </span>
             <form action="{{ route('attendance.check-out') }}" method="POST">
                 @csrf
                 <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow shadow-emerald-600/30 transition-all duration-200">

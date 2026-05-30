@@ -4,16 +4,18 @@ use App\Models\Attendance;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Employee;
-use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Models\Payroll;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 
 uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    Carbon::setTestNow(Carbon::today()->setTime(9, 0, 0));
+
     // Seed essential roles, departments, designations
     $this->department = Department::create(['name' => 'Tech', 'description' => 'Tech Team']);
     $this->designation = Designation::create(['department_id' => $this->department->id, 'name' => 'Coder']);
@@ -57,6 +59,10 @@ beforeEach(function () {
     ]);
 });
 
+afterEach(function () {
+    Carbon::setTestNow(null);
+});
+
 test('unauthenticated users are redirected to login', function () {
     $this->get('/')
         ->assertRedirect('/login');
@@ -85,7 +91,7 @@ test('employees can clock check-in shift logs cleanly', function () {
 
     $this->assertDatabaseHas('attendance', [
         'employee_id' => $this->employee->id,
-        'date' => now()->toDateString() . ' 00:00:00',
+        'date' => now()->toDateString().' 00:00:00',
         'status' => 'Present',
     ]);
 });
@@ -159,4 +165,46 @@ test('payroll arithmetic computes net salary accurately', function () {
 
     // Net = Gross (74000) - Deductions (9375) = 64625
     expect($payroll->net_salary)->toEqual(64625.00);
+});
+
+test('employees checking in after 10:15 are marked as Late', function () {
+    Carbon::setTestNow(Carbon::today()->setTime(10, 30, 0));
+
+    $this->actingAs($this->employeeUser)
+        ->post('/attendance/check-in', ['wfh' => 0])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('attendance', [
+        'employee_id' => $this->employee->id,
+        'date' => Carbon::today()->toDateString().' 00:00:00',
+        'status' => 'Late',
+    ]);
+});
+
+test('employees checking in after 11:45 are marked as Half day', function () {
+    Carbon::setTestNow(Carbon::today()->setTime(12, 00, 0));
+
+    $this->actingAs($this->employeeUser)
+        ->post('/attendance/check-in', ['wfh' => 0])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('attendance', [
+        'employee_id' => $this->employee->id,
+        'date' => Carbon::today()->toDateString().' 00:00:00',
+        'status' => 'Half day',
+    ]);
+});
+
+test('employees checking in WFH after 10:15 or 11:45 are still marked as Work from home', function () {
+    Carbon::setTestNow(Carbon::today()->setTime(12, 15, 0));
+
+    $this->actingAs($this->employeeUser)
+        ->post('/attendance/check-in', ['wfh' => 1])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('attendance', [
+        'employee_id' => $this->employee->id,
+        'date' => Carbon::today()->toDateString().' 00:00:00',
+        'status' => 'Work from home',
+    ]);
 });

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
+use App\Models\Department;
 use App\Models\Employee;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,17 +26,17 @@ class AttendanceController extends Controller
             $query = Attendance::with('employee.department')->where('date', $date);
 
             if ($deptId = $request->input('department_id')) {
-                $query->whereHas('employee', function($q) use ($deptId) {
+                $query->whereHas('employee', function ($q) use ($deptId) {
                     $q->where('department_id', $deptId);
                 });
             }
 
             $attendances = $query->get();
-            $departments = \App\Models\Department::all();
-            
+            $departments = Department::all();
+
             // Stats today
             $totalEmployees = Employee::where('employment_status', 'Active')->count();
-            $presentCount = Attendance::where('date', $date)->whereIn('status', ['Present', 'Half day', 'Work from home'])->count();
+            $presentCount = Attendance::where('date', $date)->whereIn('status', ['Present', 'Half day', 'Work from home', 'Late'])->count();
             $absentCount = $totalEmployees - $presentCount;
 
             return view('attendance.index', compact('attendances', 'departments', 'date', 'presentCount', 'absentCount', 'totalEmployees'));
@@ -43,18 +44,18 @@ class AttendanceController extends Controller
 
         // Employee View: Personal Monthly Attendance Log
         $employee = $user->employee;
-        if (!$employee) {
+        if (! $employee) {
             return view('attendance.index', ['noProfile' => true]);
         }
 
         $month = $request->input('month', now()->format('Y-m'));
-        $startOfMonth = Carbon::parse($month . '-01')->startOfMonth();
-        $endOfMonth = Carbon::parse($month . '-01')->endOfMonth();
+        $startOfMonth = Carbon::parse($month.'-01')->startOfMonth();
+        $endOfMonth = Carbon::parse($month.'-01')->endOfMonth();
 
         $attendances = Attendance::where('employee_id', $employee->id)
             ->whereBetween('date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
             ->get()
-            ->groupBy(fn($item) => $item->date->toDateString());
+            ->groupBy(fn ($item) => $item->date->toDateString());
 
         // Generate full calendar days
         $calendarDays = [];
@@ -72,11 +73,14 @@ class AttendanceController extends Controller
                 $hasWfh = $dayAtts->contains('status', 'Work from home');
                 $hasPresent = $dayAtts->contains('status', 'Present');
                 $hasHalfDay = $dayAtts->contains('status', 'Half day');
+                $hasLate = $dayAtts->contains('status', 'Late');
 
                 if ($hasWfh) {
                     $status = 'Work from home';
                 } elseif ($hasPresent) {
                     $status = 'Present';
+                } elseif ($hasLate) {
+                    $status = 'Late';
                 } elseif ($hasHalfDay) {
                     $status = 'Half day';
                 } else {
@@ -110,7 +114,7 @@ class AttendanceController extends Controller
         $this->ensureEmployeeProfileExists($user);
         $employee = $user->employee;
 
-        if (!$employee) {
+        if (! $employee) {
             return back()->with('error', 'No employee profile associated with your user.');
         }
 
@@ -124,8 +128,23 @@ class AttendanceController extends Controller
         }
 
         $today = now()->toDateString();
-        $checkInTime = now()->toTimeString();
-        $status = $request->boolean('wfh') ? 'Work from home' : 'Present';
+        $currentTime = now();
+        $checkInTime = $currentTime->toTimeString();
+
+        if ($request->boolean('wfh')) {
+            $status = 'Work from home';
+        } else {
+            $time1015 = Carbon::today()->setTime(10, 15);
+            $time1145 = Carbon::today()->setTime(11, 45);
+
+            if ($currentTime->greaterThan($time1145)) {
+                $status = 'Half day';
+            } elseif ($currentTime->greaterThan($time1015)) {
+                $status = 'Late';
+            } else {
+                $status = 'Present';
+            }
+        }
 
         Attendance::create([
             'employee_id' => $employee->id,
@@ -134,7 +153,7 @@ class AttendanceController extends Controller
             'status' => $status,
         ]);
 
-        return back()->with('success', 'Checked in successfully at ' . now()->format('H:i A') . '.');
+        return back()->with('success', 'Checked in successfully at '.now()->format('H:i A').'.');
     }
 
     /**
@@ -146,7 +165,7 @@ class AttendanceController extends Controller
         $this->ensureEmployeeProfileExists($user);
         $employee = $user->employee;
 
-        if (!$employee) {
+        if (! $employee) {
             return back()->with('error', 'No employee profile associated.');
         }
 
@@ -156,7 +175,7 @@ class AttendanceController extends Controller
             ->latest()
             ->first();
 
-        if (!$attendance) {
+        if (! $attendance) {
             return back()->with('error', 'You have not checked in yet.');
         }
 
@@ -164,10 +183,10 @@ class AttendanceController extends Controller
         $attendance->check_out = $checkOutTime;
 
         // Calculate hours accurately, handling shifts crossing midnight!
-        $checkIn = Carbon::parse($attendance->date->toDateString() . ' ' . $attendance->check_in);
+        $checkIn = Carbon::parse($attendance->date->toDateString().' '.$attendance->check_in);
         $checkOut = now();
         $totalHours = round($checkIn->diffInMinutes($checkOut) / 60, 2);
-        
+
         $attendance->total_hours = $totalHours;
 
         // Auto half-day marking if worked less than 4 hours
@@ -177,6 +196,6 @@ class AttendanceController extends Controller
 
         $attendance->save();
 
-        return back()->with('success', 'Checked out successfully at ' . now()->format('H:i A') . '. Total working hours: ' . $totalHours . ' hrs.');
+        return back()->with('success', 'Checked out successfully at '.now()->format('H:i A').'. Total working hours: '.$totalHours.' hrs.');
     }
 }
