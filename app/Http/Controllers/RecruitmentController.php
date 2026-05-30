@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\CandidateApplication;
 use App\Models\Department;
 use App\Models\Interview;
+use App\Models\JobCategory;
 use App\Models\JobPost;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,11 +16,11 @@ use Illuminate\View\View;
 class RecruitmentController extends Controller
 {
     /**
-     * Display recruitment listings and candidates pipeline.
+     * Display recruitment listings and candidates pipeline for HR Admins.
      */
     public function index(Request $request): View
     {
-        $jobs = JobPost::with('department')->withCount('applications')->get();
+        $jobs = JobPost::with(['department', 'jobCategory'])->withCount('applications')->get();
         $selectedJobId = $request->input('job_post_id');
 
         $query = CandidateApplication::with(['jobPost.department']);
@@ -34,8 +35,9 @@ class RecruitmentController extends Controller
 
         $applications = $query->latest()->paginate(15)->withQueryString();
         $departments = Department::all();
+        $categories = JobCategory::all();
 
-        return view('recruitment.index', compact('jobs', 'applications', 'selectedJobId', 'departments'));
+        return view('recruitment.index', compact('jobs', 'applications', 'selectedJobId', 'departments', 'categories'));
     }
 
     /**
@@ -46,6 +48,7 @@ class RecruitmentController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'department_id' => ['required', 'exists:departments,id'],
+            'job_category_id' => ['nullable', 'exists:job_categories,id'],
             'experience_required' => ['required', 'string', 'max:100'],
             'salary_range' => ['required', 'string', 'max:100'],
             'description' => ['required', 'string'],
@@ -56,10 +59,37 @@ class RecruitmentController extends Controller
         ActivityLog::create([
             'user_id' => Auth::id(),
             'activity' => 'Job Post Created',
-            'description' => "Created job post for {$job->title} in department."
+            'description' => "Created job post for {$job->title} in department.",
         ]);
 
         return redirect()->route('jobs.index')->with('success', 'Job posting created successfully.');
+    }
+
+    /**
+     * Display the public careers portal listing active jobs.
+     */
+    public function careersPortal(): View
+    {
+        $jobs = JobPost::with(['department', 'jobCategory'])
+            ->where('status', 'Active')
+            ->latest()
+            ->get();
+
+        $categories = JobCategory::all();
+
+        return view('recruitment.careers', compact('jobs', 'categories'));
+    }
+
+    /**
+     * Display a single job posting for public application.
+     */
+    public function careersJob(JobPost $job): View
+    {
+        if ($job->status !== 'Active') {
+            abort(404);
+        }
+
+        return view('recruitment.careers_show', compact('job'));
     }
 
     /**
@@ -89,12 +119,12 @@ class RecruitmentController extends Controller
     }
 
     /**
-     * Update candidate status.
+     * Update candidate status in the ATS tracking pipeline.
      */
     public function updateStatus(Request $request, CandidateApplication $application): RedirectResponse
     {
         $request->validate([
-            'status' => ['required', 'string', 'in:Applied,Shortlisted,Interview Scheduled,Selected,Rejected,Hired'],
+            'status' => ['required', 'string', 'in:Applied,Screening,Shortlisted,Interview Scheduled,Interviewed,Selected,Rejected,Hired'],
         ]);
 
         $oldStatus = $application->status;
@@ -105,7 +135,7 @@ class RecruitmentController extends Controller
         ActivityLog::create([
             'user_id' => Auth::id(),
             'activity' => 'Candidate Status Updated',
-            'description' => "Updated status of {$application->full_name} for {$application->jobPost->title} from {$oldStatus} to {$newStatus}."
+            'description' => "Updated status of {$application->full_name} for {$application->jobPost->title} from {$oldStatus} to {$newStatus}.",
         ]);
 
         return back()->with('success', 'Candidate status updated successfully.');
@@ -135,7 +165,7 @@ class RecruitmentController extends Controller
         ActivityLog::create([
             'user_id' => Auth::id(),
             'activity' => 'Interview Scheduled',
-            'description' => "Scheduled interview for {$application->full_name} on {$request->input('interview_date')}."
+            'description' => "Scheduled interview for {$application->full_name} on {$request->input('interview_date')}.",
         ]);
 
         return back()->with('success', 'Interview scheduled and candidate status updated successfully.');

@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LeaveRequest extends Model
 {
-    use HasFactory;
+    use BelongsToTenant, HasFactory;
 
     protected $fillable = [
+        'tenant_id',
         'employee_id',
         'leave_type_id',
         'start_date',
@@ -49,6 +51,7 @@ class LeaveRequest extends Model
         if ($this->start_date && $this->end_date) {
             return $this->start_date->diffInDays($this->end_date) + 1;
         }
+
         return 0;
     }
 }

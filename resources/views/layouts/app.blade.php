@@ -171,6 +171,18 @@
                     </nav>
                 </div>
                 @endif
+
+                @if(Auth::user()->isSuperAdmin())
+                <div>
+                    <span class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-3">System Administration</span>
+                    <nav class="space-y-1">
+                        <a href="{{ route('admin.tenants.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200 {{ request()->routeIs('admin.tenants.*') ? 'sidebar-item-active' : '' }}">
+                            <i class="fa-solid fa-server w-5 text-center text-slate-400"></i>
+                            <span class="text-sm font-medium">Tenant Management</span>
+                        </a>
+                    </nav>
+                </div>
+                @endif
             </div>
 
             <div class="mt-auto border-t border-slate-800/50 pt-4 flex flex-col gap-2">

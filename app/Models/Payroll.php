@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payroll extends Model
 {
-    use HasFactory;
+    use BelongsToTenant, HasFactory;
 
     protected $fillable = [
+        'tenant_id',
         'employee_id',
         'salary_month',
         'basic_salary',
@@ -57,16 +59,16 @@ class Payroll extends Model
 
     public function calculateSalary(): void
     {
-        $this->gross_salary = $this->basic_salary 
-            + $this->hra 
-            + $this->incentives 
-            + $this->bonuses 
+        $this->gross_salary = $this->basic_salary
+            + $this->hra
+            + $this->incentives
+            + $this->bonuses
             + $this->allowances;
 
-        $this->total_deductions = $this->pf 
-            + $this->esi 
-            + $this->tax 
-            + $this->loan_deductions 
+        $this->total_deductions = $this->pf
+            + $this->esi
+            + $this->tax
+            + $this->loan_deductions
             + $this->other_deductions;
 
         $this->net_salary = $this->gross_salary - $this->total_deductions;

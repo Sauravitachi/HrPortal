@@ -24,6 +24,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // 0. Seed Roles and Permissions
+        $this->call(RolesAndPermissionsSeeder::class);
+
         // 1. Create Core Departments
         $eng = Department::create(['name' => 'Engineering', 'description' => 'Product development, systems engineering, and technology support.']);
         $hrs = Department::create(['name' => 'Human Resources', 'description' => 'Talent acquisition, employee relations, payroll, and culture.']);
@@ -52,7 +55,7 @@ class DatabaseSeeder extends Seeder
         Holiday::create(['name' => 'Annual Strategy Day', 'date' => now()->addMonths(2)->toDateString(), 'type' => 'Company', 'description' => 'Corporate team planning session.']);
 
         // 5. Create Core Users & Employee Profiles
-        
+
         // Super Admin User
         $superUser = User::create([
             'name' => 'Saurav Admin',
@@ -60,6 +63,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'super_admin',
         ]);
+        $superUser->assignRole('super_admin');
 
         Employee::create([
             'user_id' => $superUser->id,
@@ -89,7 +93,8 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'hr_manager',
         ]);
-        
+        $hrUser->assignRole('hr_manager');
+
         $hrEmployee = Employee::create([
             'user_id' => $hrUser->id,
             'employee_id' => 'EMP-0001',
@@ -118,6 +123,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'employee',
         ]);
+        $empUser->assignRole('employee');
 
         $empEmployee = Employee::create([
             'user_id' => $empUser->id,
@@ -168,7 +174,7 @@ class DatabaseSeeder extends Seeder
         $today = now();
 
         while ($currentDate->lte($today)) {
-            if (!$currentDate->isWeekend()) {
+            if (! $currentDate->isWeekend()) {
                 // Clock Preeti (HR)
                 Attendance::create([
                     'employee_id' => $hrEmployee->id,

@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CandidateApplication extends Model
 {
-    use HasFactory;
+    use BelongsToTenant, HasFactory;
 
-    protected $fillable = ['job_post_id', 'full_name', 'email', 'contact_number', 'resume_path', 'status'];
+    protected $fillable = ['tenant_id', 'job_post_id', 'full_name', 'email', 'contact_number', 'resume_path', 'status'];
 
     public function jobPost(): BelongsTo
     {
@@ -21,5 +23,10 @@ class CandidateApplication extends Model
     public function interviews(): HasMany
     {
         return $this->hasMany(Interview::class);
+    }
+
+    public function matchScore(): HasOne
+    {
+        return $this->hasOne(CandidateMatchScore::class);
     }
 }
