@@ -29,4 +29,29 @@ class CandidateApplication extends Model
     {
         return $this->hasOne(CandidateMatchScore::class);
     }
+
+    public function resumeData(): HasOne
+    {
+        return $this->hasOne(CandidateResumeData::class);
+    }
+
+    public function skills(): HasMany
+    {
+        return $this->hasMany(CandidateSkill::class);
+    }
+
+    public function education(): HasMany
+    {
+        return $this->hasMany(CandidateEducation::class);
+    }
+
+    public function projects(): HasMany
+    {
+        return $this->hasMany(CandidateProject::class);
+    }
+
+    public function generatedQuestions(): HasMany
+    {
+        return $this->hasMany(AiInterviewQuestion::class);
+    }
 }

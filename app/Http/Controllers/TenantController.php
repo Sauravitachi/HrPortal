@@ -15,8 +15,13 @@ class TenantController extends Controller
      */
     public function index(): View
     {
-        // Super Admins see all tenants across the landlord boundary
-        $tenants = Tenant::with('company')->latest()->get();
+        // Super Admins see all tenants across the landlord boundary, with their associated users and employees
+        $tenants = Tenant::with([
+            'company',
+            'users',
+            'employees.department',
+            'employees.designation',
+        ])->latest()->get();
 
         return view('admin.tenants', compact('tenants'));
     }

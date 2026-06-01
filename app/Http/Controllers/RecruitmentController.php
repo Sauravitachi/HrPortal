@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessCandidateApplicationJob;
+use App\Jobs\PublishJobPostJob;
 use App\Models\ActivityLog;
 use App\Models\CandidateApplication;
 use App\Models\Department;
 use App\Models\Interview;
+use App\Models\JobBoardIntegration;
 use App\Models\JobCategory;
 use App\Models\JobPost;
 use Illuminate\Http\RedirectResponse;
@@ -62,6 +65,12 @@ class RecruitmentController extends Controller
             'description' => "Created job post for {$job->title} in department.",
         ]);
 
+        // Auto-syndicate to active external platforms
+        $activePlatforms = JobBoardIntegration::where('is_active', true)->pluck('platform')->toArray();
+        if (! empty($activePlatforms)) {
+            PublishJobPostJob::dispatch($job->id, $activePlatforms, $job->tenant_id);
+        }
+
         return redirect()->route('jobs.index')->with('success', 'Job posting created successfully.');
     }
 
@@ -106,7 +115,7 @@ class RecruitmentController extends Controller
 
         $resumePath = $request->file('resume_file')->store('resumes', 'public');
 
-        CandidateApplication::create([
+        $application = CandidateApplication::create([
             'job_post_id' => $job->id,
             'full_name' => $validated['full_name'],
             'email' => $validated['email'],
@@ -114,6 +123,12 @@ class RecruitmentController extends Controller
             'resume_path' => $resumePath,
             'status' => 'Applied',
         ]);
+
+        // Dispatch background processing job
+        ProcessCandidateApplicationJob::dispatch(
+            $application->id,
+            $application->tenant_id
+        );
 
         return back()->with('success', 'Your application has been submitted successfully.');
     }

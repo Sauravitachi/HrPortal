@@ -10,9 +10,14 @@
             <p class="text-xs text-slate-400 mt-1">Publish job requisitions, evaluate candidate applications, and schedule panel interviews.</p>
         </div>
         
-        <button onclick="document.getElementById('job_modal').classList.remove('hidden')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition duration-200 flex items-center gap-2 shadow shadow-indigo-600/35">
-            <i class="fa-solid fa-plus"></i> Add Job Post
-        </button>
+        <div class="flex gap-2">
+            <a href="{{ route('jobs.ai.dashboard') }}" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition duration-200 flex items-center gap-2 shadow shadow-indigo-600/35">
+                <i class="fa-solid fa-robot"></i> AI Recruitment Hub
+            </a>
+            <button onclick="document.getElementById('job_modal').classList.remove('hidden')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition duration-200 flex items-center gap-2 shadow shadow-indigo-600/35">
+                <i class="fa-solid fa-plus"></i> Add Job Post
+            </button>
+        </div>
     </div>
 
     <!-- Active Job Postings Carousel/Roster -->
@@ -74,6 +79,7 @@
                         <th class="p-3.5">Applicant Details</th>
                         <th class="p-3.5">Applied Position</th>
                         <th class="p-3.5">Stage Status</th>
+                        <th class="p-3.5">AI Match Score</th>
                         <th class="p-3.5">Candidate Resume</th>
                         <th class="p-3.5 text-right">Process Applicant</th>
                     </tr>
@@ -96,6 +102,17 @@
                                 {{ $app->status === 'Hired' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : ($app->status === 'Rejected' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20') }}">
                                 {{ $app->status }}
                             </span>
+                        </td>
+                        <td class="p-3.5">
+                            @if($app->matchScore)
+                                <a href="{{ route('jobs.candidate.ai', $app->id) }}" class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 transition">
+                                    <i class="fa-solid fa-robot"></i> {{ $app->matchScore->match_score }}%
+                                </a>
+                            @else
+                                <span class="px-2 py-1 rounded-lg text-[9px] font-bold font-mono bg-slate-800/40 text-slate-500 border border-slate-800">
+                                    No Score
+                                </span>
+                            @endif
                         </td>
                         <td class="p-3.5">
                             <a href="{{ asset('storage/' . $app->resume_path) }}" target="_blank" class="text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 font-mono">

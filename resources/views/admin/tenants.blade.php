@@ -68,6 +68,7 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b border-slate-200 text-[9px] text-slate-500 uppercase tracking-wider font-bold bg-slate-50/50">
+                        <th class="p-3.5 w-10 text-center"></th>
                         <th class="p-3.5">Company Branding Name</th>
                         <th class="p-3.5">Subdomain & Router Domain</th>
                         <th class="p-3.5">Current License Plan</th>
@@ -76,11 +77,21 @@
                 </thead>
                 <tbody class="divide-y divide-slate-200/60 text-xs text-slate-600">
                     @foreach($tenants as $tenant)
-                    <tr class="hover:bg-slate-50/30">
+                    <tr class="hover:bg-slate-50/30 transition">
+                        <td class="p-3.5 w-10 text-center">
+                            <button onclick="toggleTenantDetails('{{ $tenant->id }}')" class="text-slate-400 hover:text-indigo-600 focus:outline-none transition-all duration-200">
+                                <i id="icon-{{ $tenant->id }}" class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </td>
                         <td class="p-3.5">
                             <div class="flex flex-col">
                                 <span class="font-bold text-slate-800">{{ $tenant->name }}</span>
-                                <span class="text-[9px] text-slate-400 font-mono">ID: {{ $tenant->id }} • Created: {{ $tenant->created_at->format('M d, Y') }}</span>
+                                <span class="text-[9px] text-slate-400 font-mono mt-0.5">
+                                    ID: {{ $tenant->id }} • Created: {{ $tenant->created_at->format('M d, Y') }} 
+                                    • <span class="text-indigo-600 font-semibold cursor-pointer hover:underline" onclick="toggleTenantDetails('{{ $tenant->id }}')">
+                                        <i class="fa-solid fa-users text-[9px] mr-0.5"></i> {{ $tenant->employees->count() }} Employees
+                                      </span>
+                                </span>
                             </div>
                         </td>
                         <td class="p-3.5 font-mono text-[11px] text-slate-500">
@@ -113,6 +124,9 @@
                             @endif
                         </td>
                     </tr>
+                    
+                    <!-- Expanded Collapsible Drawer Row Component -->
+                    <x-tenant-details :tenant="$tenant" />
                     @endforeach
                 </tbody>
             </table>
@@ -160,6 +174,26 @@
             </form>
         </div>
     </div>
+    
+    <script>
+        function toggleTenantDetails(id) {
+            const row = document.getElementById('details-' + id);
+            const icon = document.getElementById('icon-' + id);
+            if (row.classList.contains('hidden')) {
+                row.classList.remove('hidden');
+                if (icon) {
+                    icon.classList.remove('fa-chevron-right');
+                    icon.classList.add('fa-chevron-down');
+                }
+            } else {
+                row.classList.add('hidden');
+                if (icon) {
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-right');
+                }
+            }
+        }
+    </script>
 
 </div>
 @endsection

@@ -72,7 +72,7 @@ class User extends Authenticatable
      */
     public function isHrManager(): bool
     {
-        return in_array($this->role, ['super_admin', 'hr_manager']);
+        return in_array($this->role, ['super_admin', 'company_admin', 'hr_manager']);
     }
 
     /**
@@ -80,6 +80,6 @@ class User extends Authenticatable
      */
     public function isEmployee(): bool
     {
-        return in_array($this->role, ['super_admin', 'hr_manager', 'employee']);
+        return in_array($this->role, ['super_admin', 'company_admin', 'hr_manager', 'employee']);
     }
 }

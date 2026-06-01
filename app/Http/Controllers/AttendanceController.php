@@ -21,7 +21,7 @@ class AttendanceController extends Controller
         $user = Auth::user();
         $date = $request->input('date', now()->toDateString());
 
-        if ($user->isSuperAdmin() || $user->role === 'hr_manager') {
+        if ($user->isHrManager()) {
             // HR / Admin View: Daily Attendance Roster
             $query = Attendance::with('employee.department')->where('date', $date);
 

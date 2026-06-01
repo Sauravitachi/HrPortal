@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AI\AIRecruitmentController;
+use App\Http\Controllers\AI\JobFeedController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -20,6 +22,11 @@ Route::get('careers', [RecruitmentController::class, 'careersPortal'])->name('ca
 Route::get('careers/{job}', [RecruitmentController::class, 'careersJob'])->name('careers.show');
 Route::post('careers/{job}/apply', [RecruitmentController::class, 'apply'])->name('careers.apply');
 
+// Public Job Feeds for External Portals
+Route::get('jobs/feed.xml', [JobFeedController::class, 'feedXml'])->name('jobs.feed.xml');
+Route::get('jobs/feed.json', [JobFeedController::class, 'feedJson'])->name('jobs.feed.json');
+Route::get('jobs/feed.rss', [JobFeedController::class, 'feedRss'])->name('jobs.feed.rss');
+
 // Core Dashboard & Modules (Restricted to logged-in users and locked to resolved tenant boundaries)
 Route::middleware(['auth', 'tenant.security'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -35,7 +42,7 @@ Route::middleware(['auth', 'tenant.security'])->group(function () {
     ]);
 
     // HR and Super Admin Restricted Modules
-    Route::middleware('role:super_admin,hr_manager')->group(function () {
+    Route::middleware('role:super_admin,company_admin,hr_manager')->group(function () {
 
         // Employee Management
         Route::get('employees/export', [EmployeeController::class, 'export'])->name('employees.export');
@@ -48,6 +55,13 @@ Route::middleware(['auth', 'tenant.security'])->group(function () {
         Route::post('payroll/generate', [PayrollController::class, 'generate'])->name('payroll.generate');
         Route::get('payroll/{payroll}', [PayrollController::class, 'show'])->name('payroll.show');
         Route::post('payroll/{payroll}/pay', [PayrollController::class, 'pay'])->name('payroll.pay');
+
+        // AI-Powered Recruitment Suite Operations
+        Route::get('jobs/ai-dashboard', [AIRecruitmentController::class, 'dashboard'])->name('jobs.ai.dashboard');
+        Route::get('jobs/candidate/{application}/ai', [AIRecruitmentController::class, 'candidateReport'])->name('jobs.candidate.ai');
+        Route::get('jobs/integrations', [AIRecruitmentController::class, 'integrations'])->name('jobs.integrations');
+        Route::post('jobs/integrations/save', [AIRecruitmentController::class, 'saveIntegration'])->name('jobs.integrations.save');
+        Route::post('jobs/{job}/publish', [AIRecruitmentController::class, 'publishJob'])->name('jobs.publish');
 
         // Recruitment Board & Applicant status pipelines
         Route::resource('jobs', RecruitmentController::class);

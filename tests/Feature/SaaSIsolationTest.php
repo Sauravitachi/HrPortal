@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
 uses(LazilyRefreshDatabase::class);
@@ -105,6 +106,7 @@ test('super admin has global cross-tenant access and bypasses scopes', function 
 });
 
 test('public careers portal lists scoped active jobs and processes applications', function () {
+    Queue::fake();
     Storage::fake('public');
 
     // 1. Create active job in Tenant A

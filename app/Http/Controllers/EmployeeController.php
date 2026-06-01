@@ -29,10 +29,10 @@ class EmployeeController extends Controller
 
         // Search Filter
         if ($search = $request->input('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('full_name', 'like', "%{$search}%")
-                  ->orWhere('employee_id', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('employee_id', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -99,7 +99,7 @@ class EmployeeController extends Controller
         ActivityLog::create([
             'user_id' => Auth::id(),
             'activity' => 'Employee Created',
-            'description' => "Created employee profile for {$employee->full_name} ({$employee->employee_id})."
+            'description' => "Created employee profile for {$employee->full_name} ({$employee->employee_id}).",
         ]);
 
         return redirect()->route('employees.index')->with('success', 'Employee profile created successfully.');
@@ -110,11 +110,11 @@ class EmployeeController extends Controller
      */
     public function show(Employee $employee): View
     {
-        $employee->load(['department', 'designation', 'reportingManager', 'documents', 'attendance' => function($q) {
+        $employee->load(['department', 'designation', 'reportingManager', 'documents', 'attendance' => function ($q) {
             $q->latest()->take(10);
-        }, 'leaveRequests' => function($q) {
+        }, 'leaveRequests' => function ($q) {
             $q->latest()->take(10);
-        }, 'payrolls' => function($q) {
+        }, 'payrolls' => function ($q) {
             $q->latest()->take(10);
         }]);
 
@@ -152,7 +152,7 @@ class EmployeeController extends Controller
         $employee->update($validated);
 
         // Update password if specified and user account exists
-        if (!empty($validated['password']) && $employee->user) {
+        if (! empty($validated['password']) && $employee->user) {
             $employee->user->update([
                 'password' => Hash::make($validated['password']),
             ]);
@@ -161,7 +161,7 @@ class EmployeeController extends Controller
         ActivityLog::create([
             'user_id' => Auth::id(),
             'activity' => 'Employee Updated',
-            'description' => "Updated employee profile for {$employee->full_name} ({$employee->employee_id})."
+            'description' => "Updated employee profile for {$employee->full_name} ({$employee->employee_id}).",
         ]);
 
         return redirect()->route('employees.show', $employee)->with('success', 'Employee profile updated successfully.');
@@ -195,7 +195,7 @@ class EmployeeController extends Controller
         ActivityLog::create([
             'user_id' => Auth::id(),
             'activity' => 'Employee Deleted',
-            'description' => "Deleted employee profile for {$employeeName} ({$employeeId})."
+            'description' => "Deleted employee profile for {$employeeName} ({$employeeId}).",
         ]);
 
         return redirect()->route('employees.index')->with('success', 'Employee profile deleted successfully.');
@@ -224,28 +224,25 @@ class EmployeeController extends Controller
         ActivityLog::create([
             'user_id' => Auth::id(),
             'activity' => 'Document Uploaded',
-            'description' => "Uploaded {$request->input('document_type')} for {$employee->full_name}."
+            'description' => "Uploaded {$request->input('document_type')} for {$employee->full_name}.",
         ]);
 
         return back()->with('success', 'Document uploaded successfully.');
     }
 
-    /**
-     * Delete an employee document.
-     */
     public function deleteDocument(EmployeeDocument $document): RedirectResponse
     {
         $employee = $document->employee;
-        
+
         Storage::disk('public')->delete($document->file_path);
-        
+
         $docType = $document->document_type;
         $document->delete();
 
         ActivityLog::create([
             'user_id' => Auth::id(),
             'activity' => 'Document Deleted',
-            'description' => "Deleted document {$docType} for {$employee->full_name}."
+            'description' => "Deleted document {$docType} for {$employee->full_name}.",
         ]);
 
         return back()->with('success', 'Document deleted successfully.');
@@ -258,7 +255,7 @@ class EmployeeController extends Controller
     {
         $headers = [
             'Content-type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename=employees_export_' . now()->format('YmdHis') . '.csv',
+            'Content-Disposition' => 'attachment; filename=employees_export_'.now()->format('YmdHis').'.csv',
             'Pragma' => 'no-cache',
             'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
             'Expires' => '0',
@@ -266,10 +263,10 @@ class EmployeeController extends Controller
 
         $columns = [
             'Employee ID', 'Full Name', 'Email', 'Contact', 'Gender', 'DOB',
-            'Department', 'Designation', 'Joining Date', 'Type', 'Location', 'Status', 'Basic Salary', 'HRA'
+            'Department', 'Designation', 'Joining Date', 'Type', 'Location', 'Status', 'Basic Salary', 'HRA',
         ];
 
-        $callback = function() use ($columns) {
+        $callback = function () use ($columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
 
@@ -290,7 +287,7 @@ class EmployeeController extends Controller
                     $emp->work_location,
                     $emp->employment_status,
                     $emp->basic_salary,
-                    $emp->hra
+                    $emp->hra,
                 ]);
             }
 

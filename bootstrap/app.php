@@ -1,12 +1,12 @@
 <?php
 
+use App\Http\Middleware\EnsureValidTenantSession;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\SubscriptionFeatureGate;
 use App\Http\Middleware\TenantSecurityMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Spatie\Multitenancy\Http\Middleware\EnsureValidTenantSession;
 use Spatie\Multitenancy\Http\Middleware\NeedsTenant;
 
 return Application::configure(basePath: dirname(__DIR__))

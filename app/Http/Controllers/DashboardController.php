@@ -24,7 +24,7 @@ class DashboardController extends Controller
 
         $this->ensureEmployeeProfileExists($user);
 
-        if ($user->isSuperAdmin() || $user->role === 'hr_manager') {
+        if ($user->isHrManager()) {
             return $this->adminDashboard();
         }
 

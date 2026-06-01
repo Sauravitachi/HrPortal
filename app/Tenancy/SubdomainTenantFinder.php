@@ -29,8 +29,6 @@ class SubdomainTenantFinder extends TenantFinder
             }
         }
 
-        // Fallback: Return default seeded tenant to guarantee backwards-compatibility
-        // and robust execution of existing unit/feature tests.
         return Tenant::where('subdomain', 'default')->first();
     }
 }

@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+    ],
+
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+    ],
+
+    'linkedin' => [
+        'api_key' => env('LINKEDIN_API_KEY'),
+        'api_secret' => env('LINKEDIN_API_SECRET'),
+        'access_token' => env('LINKEDIN_ACCESS_TOKEN'),
+        'organization_id' => env('LINKEDIN_ORGANIZATION_ID'),
+        'person_id' => env('LINKEDIN_PERSON_ID'),
+    ],
+
 ];
