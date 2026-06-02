@@ -193,13 +193,7 @@ class MockAIService implements AIServiceInterface
             }
         }
 
-        if (empty($parsedSkills)) {
-            $parsedSkills = [
-                ['name' => 'Software Development', 'type' => 'technical'],
-                ['name' => 'Communication', 'type' => 'soft'],
-                ['name' => 'Problem Solving', 'type' => 'soft'],
-            ];
-        }
+        // Leave empty if no skills are parsed
 
         // 8. Dynamic Education Extraction
         $education = [];
@@ -230,21 +224,7 @@ class MockAIService implements AIServiceInterface
             }
         }
 
-        if (empty($education)) {
-            if (preg_match('/([A-Za-z0-9\s\,\&]+(?:University|Institute|College|Academy|School))/i', $resumeText, $collMatches)) {
-                $education[] = [
-                    'degree' => 'Bachelor Degree',
-                    'college' => trim($collMatches[1]),
-                    'passing_year' => 2020,
-                ];
-            } else {
-                $education[] = [
-                    'degree' => 'Bachelor Degree',
-                    'college' => 'Not Specified',
-                    'passing_year' => 2020,
-                ];
-            }
-        }
+        // Leave empty if no education details are parsed
 
         // 9. Dynamic Projects Extraction
         $projects = [];
@@ -282,22 +262,7 @@ class MockAIService implements AIServiceInterface
             }
         }
 
-        if (empty($projects)) {
-            $techNames = array_column(array_filter($parsedSkills, fn ($s) => $s['type'] === 'technical'), 'name');
-            $techList = implode(', ', array_slice($techNames, 0, 4));
-
-            if ($totalExp == 0.0) {
-                $projects[] = [
-                    'name' => 'Academic Portfolio Showcase',
-                    'technologies_used' => $techList ?: 'HTML, CSS, JavaScript',
-                ];
-            } else {
-                $projects[] = [
-                    'name' => 'Enterprise System Integration',
-                    'technologies_used' => $techList ?: 'PHP, Laravel, MySQL',
-                ];
-            }
-        }
+        // Leave empty if no projects are parsed
 
         return [
             'full_name' => $fullName,
