@@ -66,7 +66,10 @@ class RecruitmentController extends Controller
         ]);
 
         // Auto-syndicate to active external platforms
-        $activePlatforms = JobBoardIntegration::where('is_active', true)->pluck('platform')->toArray();
+        $activePlatforms = JobBoardIntegration::where('tenant_id', $job->tenant_id)
+            ->where('is_active', true)
+            ->pluck('platform')
+            ->toArray();
         if (! empty($activePlatforms)) {
             PublishJobPostJob::dispatch($job->id, $activePlatforms, $job->tenant_id);
         }

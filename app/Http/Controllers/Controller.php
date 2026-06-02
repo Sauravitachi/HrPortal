@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Employee;
 use App\Models\Department;
 use App\Models\Designation;
+use App\Models\Employee;
 
 abstract class Controller
 {
@@ -13,13 +13,13 @@ abstract class Controller
      */
     protected function ensureEmployeeProfileExists($user): void
     {
-        if ($user && !$user->employee) {
+        if ($user && ! $user->employee) {
             $dept = Department::first();
             $desig = Designation::first();
 
             Employee::create([
                 'user_id' => $user->id,
-                'employee_id' => 'EMP-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
+                'employee_id' => 'EMP-'.str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
                 'full_name' => $user->name,
                 'email' => $user->email,
                 'contact_number' => '+91 9999999999',

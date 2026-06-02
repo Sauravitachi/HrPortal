@@ -14,6 +14,9 @@
         </div>
         
         <div class="flex gap-2">
+            <a href="{{ route('jobs.ats.check.form') }}" class="px-4 py-2 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition duration-200 shadow-sm flex items-center gap-1.5">
+                <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i> AI ATS Checker
+            </a>
             <a href="{{ route('jobs.index') }}" class="px-4 py-2 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition duration-200 shadow-sm flex items-center gap-1.5">
                 <i class="fa-solid fa-briefcase"></i> Job Pipeline
             </a>

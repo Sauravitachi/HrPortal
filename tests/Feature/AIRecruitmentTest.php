@@ -3,6 +3,7 @@
 use App\Jobs\ProcessCandidateApplicationJob;
 use App\Models\CandidateApplication;
 use App\Models\Department;
+use App\Models\JobBoardIntegration;
 use App\Models\JobPost;
 use App\Models\User;
 use App\Services\AIInterviewService;
@@ -159,7 +160,59 @@ test('hr can manage job board integrations', function () {
 
     $this->assertDatabaseHas('job_board_integrations', [
         'platform' => 'linkedin',
-        'api_key' => 'test-key-123',
         'is_active' => true,
+    ]);
+
+    $integration = JobBoardIntegration::where('platform', 'linkedin')->first();
+    expect($integration->api_key)->toEqual('test-key-123');
+    expect($integration->api_secret)->toEqual('test-secret-456');
+});
+
+test('hr can view the ai ats check form', function () {
+    $this->actingAs($this->hr);
+
+    $response = $this->get(route('jobs.ats.check.form'));
+
+    $response->assertSuccessful();
+    $response->assertSee('AI ATS Resume Checker');
+});
+
+test('hr can submit a resume for immediate synchronous ai ats check', function () {
+    $this->actingAs($this->hr);
+    Storage::fake('public');
+
+    $file = UploadedFile::fake()->create('resume_test.docx', 100);
+
+    $response = $this->post(route('jobs.ats.check.process'), [
+        'job_post_id' => $this->job->id,
+        'full_name' => 'Alice Smith',
+        'email' => 'alice.smith@example.com',
+        'contact_number' => '+91 9876500000',
+        'resume_file' => $file,
+    ]);
+
+    // Should redirect to candidate AI evaluation page
+    $app = CandidateApplication::where('email', 'alice.smith@example.com')->first();
+    expect($app)->not->toBeNull();
+
+    $response->assertRedirect(route('jobs.candidate.ai', $app->id));
+
+    // Verify all services ran synchronously and structured resume data exists
+    $this->assertDatabaseHas('candidate_resume_data', [
+        'candidate_application_id' => $app->id,
+        'full_name' => 'Alice Smith',
+    ]);
+
+    $this->assertDatabaseHas('candidate_match_scores', [
+        'candidate_application_id' => $app->id,
+    ]);
+
+    $this->assertDatabaseHas('ai_interview_questions', [
+        'candidate_application_id' => $app->id,
+    ]);
+
+    $this->assertDatabaseHas('resume_parse_logs', [
+        'candidate_application_id' => $app->id,
+        'status' => 'success',
     ]);
 });

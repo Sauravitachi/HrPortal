@@ -8,8 +8,13 @@ use App\Models\CandidateApplication;
 use App\Models\JobBoardIntegration;
 use App\Models\JobPost;
 use App\Models\JobPublishing;
+use App\Models\ResumeParseLog;
+use App\Services\AIInterviewService;
+use App\Services\CandidateScoringService;
+use App\Services\ResumeParserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class AIRecruitmentController extends Controller
@@ -118,7 +123,7 @@ class AIRecruitmentController extends Controller
         if (! empty($validated['settings_json'])) {
             $settings = json_decode($validated['settings_json'], true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                return back()->with('error', 'Invalid JSON structure in Settings field.');
+                return redirect()->route('jobs.integrations')->with('error', 'Invalid JSON structure in Settings field.');
             }
         }
 
@@ -134,7 +139,7 @@ class AIRecruitmentController extends Controller
             ]
         );
 
-        return back()->with('success', 'Integration settings saved successfully.');
+        return redirect()->route('jobs.integrations')->with('success', 'Integration settings saved successfully.');
     }
 
     /**
@@ -154,5 +159,92 @@ class AIRecruitmentController extends Controller
         PublishJobPostJob::dispatch($job->id, $platforms, $tenantId);
 
         return back()->with('success', 'Job publishing dispatched to queue. Platforms: '.implode(', ', array_map('ucfirst', $platforms)));
+    }
+
+    /**
+     * Display the AI ATS Check Form.
+     */
+    public function atsCheckForm(): View
+    {
+        // Get active job posts for selection
+        $jobs = JobPost::where('status', 'Active')->latest()->get();
+
+        return view('recruitment.ats_check', compact('jobs'));
+    }
+
+    /**
+     * Process AI ATS Check on uploaded resume.
+     */
+    public function atsCheckProcess(
+        Request $request,
+        ResumeParserService $parserService,
+        CandidateScoringService $scoringService,
+        AIInterviewService $interviewService
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'job_post_id' => ['required', 'exists:job_posts,id'],
+            'full_name' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'string', 'email', 'max:255'],
+            'contact_number' => ['nullable', 'string', 'max:20'],
+            'resume_file' => ['required', 'file', 'mimes:pdf,docx', 'max:5120'],
+        ]);
+
+        $job = JobPost::findOrFail($validated['job_post_id']);
+        $tenantId = app('currentTenant')->id ?? null;
+
+        // Store resume
+        $resumePath = $request->file('resume_file')->store('resumes', 'public');
+
+        // Create a CandidateApplication
+        $application = CandidateApplication::create([
+            'tenant_id' => $tenantId,
+            'job_post_id' => $job->id,
+            'full_name' => $validated['full_name'] ?? 'ATS Check Candidate',
+            'email' => $validated['email'] ?? 'ats-check@example.com',
+            'contact_number' => $validated['contact_number'] ?? '0000000000',
+            'resume_path' => $resumePath,
+            'status' => 'Screening',
+        ]);
+
+        try {
+            // Process synchronously
+            $parserService->parse($application);
+            $scoringService->score($application, $job);
+            $interviewService->generateQuestions($application, $job);
+
+            // Audit Log
+            ResumeParseLog::create([
+                'tenant_id' => $tenantId,
+                'candidate_application_id' => $application->id,
+                'status' => 'success',
+            ]);
+
+            // Set shortlisted if score >= 75
+            $score = $application->matchScore()->first();
+            if ($score && $score->match_score >= 75) {
+                $application->update(['status' => 'Shortlisted']);
+            } else {
+                $application->update(['status' => 'Applied']);
+            }
+
+            return redirect()->route('jobs.candidate.ai', $application->id)
+                ->with('success', 'AI ATS check completed successfully! Performance scorecard and interview guide generated.');
+        } catch (\Exception $e) {
+            Log::error('AI ATS Check Failed: '.$e->getMessage(), [
+                'exception' => $e,
+                'application_id' => $application->id,
+            ]);
+
+            ResumeParseLog::create([
+                'tenant_id' => $tenantId,
+                'candidate_application_id' => $application->id,
+                'status' => 'failed',
+                'error_message' => mb_scrub($e->getMessage(), 'UTF-8'),
+            ]);
+
+            $application->update(['status' => 'Applied']);
+
+            return back()->with('error', 'AI ATS check encountered an error: '.$e->getMessage());
+        }
     }
 }

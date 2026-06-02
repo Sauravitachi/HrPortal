@@ -33,7 +33,7 @@ class StoreEmployeeRequest extends FormRequest
             'employment_status' => ['required', 'string'],
             'basic_salary' => ['required', 'numeric', 'min:0'],
             'hra' => ['required', 'numeric', 'min:0'],
-            
+
             // Optional user account fields
             'create_user_account' => ['nullable', 'boolean'],
             'role' => ['nullable', 'string', 'in:super_admin,hr_manager,employee'],

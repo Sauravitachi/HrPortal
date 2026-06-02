@@ -25,7 +25,9 @@ class JobBoardIntegration extends Model
     {
         return [
             'is_active' => 'boolean',
-            'settings' => 'array',
+            'settings' => 'encrypted:array',
+            'api_key' => 'encrypted',
+            'api_secret' => 'encrypted',
         ];
     }
 }

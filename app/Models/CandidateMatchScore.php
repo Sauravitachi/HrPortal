@@ -19,6 +19,12 @@ class CandidateMatchScore extends Model
         'matched_keywords',
         'missing_keywords',
         'generated_interview_questions',
+        'strengths',
+        'missing_skills',
+        'experience_gap',
+        'hiring_recommendation',
+        'evaluation_scorecard',
+        'feedback_form',
     ];
 
     protected function casts(): array
@@ -27,6 +33,10 @@ class CandidateMatchScore extends Model
             'matched_keywords' => 'array',
             'missing_keywords' => 'array',
             'generated_interview_questions' => 'array',
+            'strengths' => 'array',
+            'missing_skills' => 'array',
+            'evaluation_scorecard' => 'array',
+            'feedback_form' => 'array',
         ];
     }
 

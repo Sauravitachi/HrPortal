@@ -58,6 +58,7 @@ class PayrollController extends Controller
 
             if ($exists) {
                 $skippedCount++;
+
                 continue;
             }
 
@@ -102,7 +103,7 @@ class PayrollController extends Controller
         ActivityLog::create([
             'user_id' => Auth::id(),
             'activity' => 'Payroll Generated',
-            'description' => "Generated payroll records for {$month}. Generated: {$generatedCount}, Skipped: {$skippedCount}."
+            'description' => "Generated payroll records for {$month}. Generated: {$generatedCount}, Skipped: {$skippedCount}.",
         ]);
 
         return back()->with('success', "Payroll processing complete. Generated: {$generatedCount} slips. Skipped: {$skippedCount} existing slips.");
@@ -114,6 +115,7 @@ class PayrollController extends Controller
     public function show(Payroll $payroll): View
     {
         $payroll->load(['employee.department', 'employee.designation']);
+
         return view('payroll.show', compact('payroll'));
     }
 
@@ -133,7 +135,7 @@ class PayrollController extends Controller
         ActivityLog::create([
             'user_id' => Auth::id(),
             'activity' => 'Payroll Paid',
-            'description' => "Marked payroll slip #{$payroll->id} as PAID for {$payroll->employee->full_name}."
+            'description' => "Marked payroll slip #{$payroll->id} as PAID for {$payroll->employee->full_name}.",
         ]);
 
         return back()->with('success', 'Payroll marked as Paid successfully.');

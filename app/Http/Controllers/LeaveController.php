@@ -8,6 +8,7 @@ use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -36,7 +37,7 @@ class LeaveController extends Controller
 
         // Employee View: Personal leave balances and request history
         $employee = $user->employee;
-        if (!$employee) {
+        if (! $employee) {
             return view('leaves.index', ['noProfile' => true]);
         }
 
@@ -56,7 +57,7 @@ class LeaveController extends Controller
                 ->where('status', 'Approved')
                 ->whereYear('start_date', $currentYear)
                 ->get()
-                ->sum(fn($req) => $req->getDurationInDays());
+                ->sum(fn ($req) => $req->getDurationInDays());
 
             $leaveBalances[] = [
                 'id' => $type->id,
@@ -76,6 +77,7 @@ class LeaveController extends Controller
     public function create(): View
     {
         $leaveTypes = LeaveType::all();
+
         return view('leaves.create', compact('leaveTypes'));
     }
 
@@ -87,7 +89,7 @@ class LeaveController extends Controller
         $user = Auth::user();
         $employee = $user->employee;
 
-        if (!$employee) {
+        if (! $employee) {
             return redirect()->route('leaves.index')->with('error', 'Employee profile required.');
         }
 
@@ -100,10 +102,10 @@ class LeaveController extends Controller
         ]);
 
         $leaveType = LeaveType::findOrFail($validated['leave_type_id']);
-        
+
         // Calculate leave duration
-        $startDate = \Illuminate\Support\Carbon::parse($validated['start_date']);
-        $endDate = \Illuminate\Support\Carbon::parse($validated['end_date']);
+        $startDate = Carbon::parse($validated['start_date']);
+        $endDate = Carbon::parse($validated['end_date']);
         $requestedDays = $startDate->diffInDays($endDate) + 1;
 
         // Verify remaining balance
@@ -113,7 +115,7 @@ class LeaveController extends Controller
             ->where('status', 'Approved')
             ->whereYear('start_date', $currentYear)
             ->get()
-            ->sum(fn($req) => $req->getDurationInDays());
+            ->sum(fn ($req) => $req->getDurationInDays());
 
         $remaining = max(0, $leaveType->max_days - $approvedDays);
 
@@ -135,7 +137,7 @@ class LeaveController extends Controller
         ActivityLog::create([
             'user_id' => Auth::id(),
             'activity' => 'Leave Requested',
-            'description' => "Requested {$requestedDays} days of {$leaveType->name} starting {$validated['start_date']}."
+            'description' => "Requested {$requestedDays} days of {$leaveType->name} starting {$validated['start_date']}.",
         ]);
 
         return redirect()->route('leaves.index')->with('success', 'Leave application submitted successfully.');
@@ -147,7 +149,7 @@ class LeaveController extends Controller
     public function update(Request $request, LeaveRequest $leave): RedirectResponse
     {
         $user = Auth::user();
-        if (!$user->isSuperAdmin() && $user->role !== 'hr_manager') {
+        if (! $user->isSuperAdmin() && $user->role !== 'hr_manager') {
             abort(403);
         }
 
@@ -163,7 +165,7 @@ class LeaveController extends Controller
         ActivityLog::create([
             'user_id' => Auth::id(),
             'activity' => "Leave {$status}",
-            'description' => "{$status} leave request #{$leave->id} for employee {$leave->employee->full_name}."
+            'description' => "{$status} leave request #{$leave->id} for employee {$leave->employee->full_name}.",
         ]);
 
         return redirect()->route('leaves.index')->with('success', "Leave request was successfully {$status}.");
@@ -174,11 +176,11 @@ class LeaveController extends Controller
      */
     public function destroy(LeaveRequest $leave): RedirectResponse
     {
-        if ($leave->employee->user_id !== Auth::id() && !Auth::user()->isHrManager()) {
+        if ($leave->employee->user_id !== Auth::id() && ! Auth::user()->isHrManager()) {
             abort(403);
         }
 
-        if ($leave->status !== 'Pending' && !Auth::user()->isSuperAdmin()) {
+        if ($leave->status !== 'Pending' && ! Auth::user()->isSuperAdmin()) {
             return back()->with('error', 'Only pending leave requests can be cancelled.');
         }
 

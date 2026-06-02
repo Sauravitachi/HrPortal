@@ -11,6 +11,9 @@
         </div>
         
         <div class="flex gap-2">
+            <a href="{{ route('jobs.ats.check.form') }}" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold px-4 py-2 rounded-xl transition duration-200 flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i> AI ATS Checker
+            </a>
             <a href="{{ route('jobs.ai.dashboard') }}" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition duration-200 flex items-center gap-2 shadow shadow-indigo-600/35">
                 <i class="fa-solid fa-robot"></i> AI Recruitment Hub
             </a>

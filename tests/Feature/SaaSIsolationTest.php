@@ -2,11 +2,15 @@
 
 use App\Models\Company;
 use App\Models\Department;
+use App\Models\JobBoardIntegration;
 use App\Models\JobPost;
+use App\Models\JobPublishing;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\JobPublishingService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -193,4 +197,138 @@ test('super admin can access tenant administration UI and create a tenant', func
         'name' => 'Cyberdyne Systems',
         'subscription_plan' => 'premium',
     ]);
+});
+
+test('tenant integrations are strictly isolated and credentials are encrypted', function () {
+    // 1. Create a tenant-scoped user for Tenant A
+    $this->tenantA->makeCurrent();
+    $adminA = User::create([
+        'name' => 'Acme Admin',
+        'email' => 'admin@acme.com',
+        'password' => bcrypt('password'),
+        'role' => 'company_admin',
+    ]);
+
+    // 2. Create a tenant-scoped user for Tenant B
+    $this->tenantB->makeCurrent();
+    $adminB = User::create([
+        'name' => 'Globex Admin',
+        'email' => 'admin@globex.com',
+        'password' => bcrypt('password'),
+        'role' => 'company_admin',
+    ]);
+
+    // 3. Configure integration for Tenant A
+    $this->tenantA->makeCurrent();
+    $this->actingAs($adminA)
+        ->withHeaders(['Host' => 'acme.hrportal.localhost'])
+        ->withSession(['ensure_valid_tenant_session_tenant_id' => $this->tenantA->id])
+        ->post(route('jobs.integrations.save'), [
+            'platform' => 'linkedin',
+            'api_key' => 'acme-linkedin-key',
+            'api_secret' => 'acme-linkedin-secret',
+            'is_active' => '1',
+        ])->assertRedirect();
+
+    // 4. Configure integration for Tenant B
+    $this->tenantB->makeCurrent();
+    $this->actingAs($adminB)
+        ->withHeaders(['Host' => 'globex.hrportal.localhost'])
+        ->withSession(['ensure_valid_tenant_session_tenant_id' => $this->tenantB->id])
+        ->post(route('jobs.integrations.save'), [
+            'platform' => 'linkedin',
+            'api_key' => 'globex-linkedin-key',
+            'api_secret' => 'globex-linkedin-secret',
+            'is_active' => '1',
+        ])->assertRedirect();
+
+    // 5. Assert isolation: Tenant A cannot see Tenant B's keys
+    $this->tenantA->makeCurrent();
+    $this->actingAs($adminA)
+        ->withHeaders(['Host' => 'acme.hrportal.localhost'])
+        ->withSession(['ensure_valid_tenant_session_tenant_id' => $this->tenantA->id])
+        ->get(route('jobs.integrations'))
+        ->assertSuccessful()
+        ->assertSee('acme-linkedin-key')
+        ->assertDontSee('globex-linkedin-key');
+
+    // 6. Assert isolation: Tenant B cannot see Tenant A's keys
+    $this->tenantB->makeCurrent();
+    $this->actingAs($adminB)
+        ->withHeaders(['Host' => 'globex.hrportal.localhost'])
+        ->withSession(['ensure_valid_tenant_session_tenant_id' => $this->tenantB->id])
+        ->get(route('jobs.integrations'))
+        ->assertSuccessful()
+        ->assertSee('globex-linkedin-key')
+        ->assertDontSee('acme-linkedin-key');
+
+    // 7. Assert database-level encryption: raw values are encrypted (not plain text)
+    Tenant::forgetCurrent();
+    $rawRows = DB::table('job_board_integrations')->get();
+    expect($rawRows)->toHaveCount(2);
+    foreach ($rawRows as $row) {
+        expect($row->api_key)->not->toContain('acme-linkedin-key');
+        expect($row->api_key)->not->toContain('globex-linkedin-key');
+        expect($row->api_secret)->not->toContain('acme-linkedin-secret');
+        expect($row->api_secret)->not->toContain('globex-linkedin-secret');
+    }
+});
+
+test('job publishing strictly respects tenant boundaries and uses correct tenant integration credentials', function () {
+    // 1. Configure integrations for Tenant A and Tenant B
+    $this->tenantA->makeCurrent();
+    JobBoardIntegration::create([
+        'platform' => 'indeed',
+        'api_key' => 'acme-indeed-key',
+        'api_secret' => 'acme-indeed-secret',
+        'is_active' => true,
+    ]);
+
+    $this->tenantB->makeCurrent();
+    JobBoardIntegration::create([
+        'platform' => 'indeed',
+        'api_key' => 'globex-indeed-key',
+        'api_secret' => 'globex-indeed-secret',
+        'is_active' => true,
+    ]);
+
+    // 2. Create job in Tenant A
+    $this->tenantA->makeCurrent();
+    $deptA = Department::create(['name' => 'Acme Eng']);
+    $jobA = JobPost::create([
+        'title' => 'Acme Dev',
+        'department_id' => $deptA->id,
+        'experience_required' => '2 Years',
+        'salary_range' => '₹4L',
+        'description' => 'Developer job',
+        'status' => 'Active',
+    ]);
+
+    // 3. Create job in Tenant B
+    $this->tenantB->makeCurrent();
+    $deptB = Department::create(['name' => 'Globex Eng']);
+    $jobB = JobPost::create([
+        'title' => 'Globex Dev',
+        'department_id' => $deptB->id,
+        'experience_required' => '2 Years',
+        'salary_range' => '₹4L',
+        'description' => 'Developer job',
+        'status' => 'Active',
+    ]);
+
+    // 4. Run JobPublishingService for Tenant A's job and assert it uses Tenant A's credentials
+    $service = new JobPublishingService;
+
+    $this->tenantA->makeCurrent();
+    $service->publishToPlatform($jobA, 'indeed');
+
+    $publishingA = JobPublishing::where('job_post_id', $jobA->id)->first();
+    expect($publishingA->status)->toEqual('published');
+
+    // 5. Run JobPublishingService for Tenant B's job and assert it uses Tenant B's credentials
+    $this->tenantB->makeCurrent();
+    $service->publishToPlatform($jobB, 'indeed');
+
+    $publishingB = JobPublishing::where('job_post_id', $jobB->id)->first();
+    expect($publishingB->status)->toEqual('published');
 });

@@ -62,6 +62,8 @@ Route::middleware(['auth', 'tenant.security'])->group(function () {
         Route::get('jobs/integrations', [AIRecruitmentController::class, 'integrations'])->name('jobs.integrations');
         Route::post('jobs/integrations/save', [AIRecruitmentController::class, 'saveIntegration'])->name('jobs.integrations.save');
         Route::post('jobs/{job}/publish', [AIRecruitmentController::class, 'publishJob'])->name('jobs.publish');
+        Route::get('jobs/ats-check', [AIRecruitmentController::class, 'atsCheckForm'])->name('jobs.ats.check.form');
+        Route::post('jobs/ats-check', [AIRecruitmentController::class, 'atsCheckProcess'])->name('jobs.ats.check.process');
 
         // Recruitment Board & Applicant status pipelines
         Route::resource('jobs', RecruitmentController::class);

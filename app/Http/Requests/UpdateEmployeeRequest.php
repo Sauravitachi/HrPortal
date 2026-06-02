@@ -14,11 +14,11 @@ class UpdateEmployeeRequest extends FormRequest
     public function rules(): array
     {
         $employeeId = $this->route('employee')->id;
-        
+
         return [
-            'employee_id' => ['required', 'string', 'unique:employees,employee_id,' . $employeeId],
+            'employee_id' => ['required', 'string', 'unique:employees,employee_id,'.$employeeId],
             'full_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:employees,email,' . $employeeId],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:employees,email,'.$employeeId],
             'contact_number' => ['required', 'string', 'max:20'],
             'profile_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
             'gender' => ['required', 'string'],
@@ -35,7 +35,7 @@ class UpdateEmployeeRequest extends FormRequest
             'employment_status' => ['required', 'string'],
             'basic_salary' => ['required', 'numeric', 'min:0'],
             'hra' => ['required', 'numeric', 'min:0'],
-            
+
             // Password change (optional during edit)
             'password' => ['nullable', 'string', 'min:8'],
         ];

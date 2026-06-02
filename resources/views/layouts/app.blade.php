@@ -172,6 +172,10 @@
                             <i class="fa-solid fa-robot w-5 text-center text-slate-400"></i>
                             <span class="text-sm font-medium">AI Screening Hub</span>
                         </a>
+                        <a href="{{ route('jobs.ats.check.form') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200 {{ request()->routeIs('jobs.ats.check.form') ? 'sidebar-item-active' : '' }}">
+                            <i class="fa-solid fa-wand-magic-sparkles w-5 text-center text-slate-400"></i>
+                            <span class="text-sm font-medium">AI ATS Checker</span>
+                        </a>
                         <a href="{{ route('jobs.integrations') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200 {{ request()->routeIs('jobs.integrations') ? 'sidebar-item-active' : '' }}">
                             <i class="fa-solid fa-circle-nodes w-5 text-center text-slate-400"></i>
                             <span class="text-sm font-medium">Job Syndication</span>

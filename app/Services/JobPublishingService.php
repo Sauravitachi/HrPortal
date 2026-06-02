@@ -39,6 +39,7 @@ class JobPublishingService
 
         // 2. Fetch platform credentials
         $integration = JobBoardIntegration::where('platform', $platform)
+            ->where('tenant_id', $job->tenant_id)
             ->where('is_active', true)
             ->first();
 

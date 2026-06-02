@@ -87,7 +87,7 @@ class ProcessCandidateApplicationJob implements ShouldQueue
                 'tenant_id' => $application->tenant_id,
                 'candidate_application_id' => $application->id,
                 'status' => 'failed',
-                'error_message' => $e->getMessage(),
+                'error_message' => mb_scrub($e->getMessage(), 'UTF-8'),
             ]);
 
             $application->update(['status' => 'Applied']); // Rollback status
