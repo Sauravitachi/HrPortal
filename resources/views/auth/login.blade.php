@@ -68,7 +68,7 @@
         </div>
 
         <!-- Card -->
-        <div class="glass-card rounded-3xl p-8 relative overflow-hidden">
+        <div class="glass-card rounded-3xl p-6 sm:p-8 relative overflow-hidden">
             <div class="absolute -top-10 -left-10 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
             <div class="absolute -bottom-10 -right-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
@@ -128,26 +128,26 @@
             <div class="mt-8 pt-6 border-t border-slate-800/50 text-center">
                 <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-4">Click to Autofill Demo Credentials</span>
                 <div class="flex flex-col gap-2.5">
-                    <button type="button" onclick="autofill('super@example.com', 'password')" class="flex items-center justify-between text-left p-2.5 rounded-xl bg-slate-900/50 hover:bg-indigo-500/10 border border-slate-800 hover:border-indigo-500/20 text-xs text-slate-400 hover:text-slate-200 transition-all duration-200">
+                    <button type="button" onclick="autofill('super@example.com', 'password')" class="flex flex-wrap items-center justify-between gap-2 text-left p-2.5 rounded-xl bg-slate-900/50 hover:bg-indigo-500/10 border border-slate-800 hover:border-indigo-500/20 text-xs text-slate-400 hover:text-slate-200 transition-all duration-200">
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-shield-halved text-indigo-400"></i>
-                            <span class="font-medium">Super Admin</span>
+                            <span class="font-medium text-slate-200">Super Admin</span>
                         </div>
                         <span class="font-mono text-[10px] text-slate-500">super@example.com</span>
                     </button>
                     
-                    <button type="button" onclick="autofill('hr@example.com', 'password')" class="flex items-center justify-between text-left p-2.5 rounded-xl bg-slate-900/50 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/20 text-xs text-slate-400 hover:text-slate-200 transition-all duration-200">
+                    <button type="button" onclick="autofill('hr@example.com', 'password')" class="flex flex-wrap items-center justify-between gap-2 text-left p-2.5 rounded-xl bg-slate-900/50 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/20 text-xs text-slate-400 hover:text-slate-200 transition-all duration-200">
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-user-tie text-emerald-400"></i>
-                            <span class="font-medium">HR Manager</span>
+                            <span class="font-medium text-slate-200">HR Manager</span>
                         </div>
                         <span class="font-mono text-[10px] text-slate-500">hr@example.com</span>
                     </button>
-
-                    <button type="button" onclick="autofill('employee@example.com', 'password')" class="flex items-center justify-between text-left p-2.5 rounded-xl bg-slate-900/50 hover:bg-purple-500/10 border border-slate-800 hover:border-purple-500/20 text-xs text-slate-400 hover:text-slate-200 transition-all duration-200">
+ 
+                    <button type="button" onclick="autofill('employee@example.com', 'password')" class="flex flex-wrap items-center justify-between gap-2 text-left p-2.5 rounded-xl bg-slate-900/50 hover:bg-purple-500/10 border border-slate-800 hover:border-purple-500/20 text-xs text-slate-400 hover:text-slate-200 transition-all duration-200">
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-user text-purple-400"></i>
-                            <span class="font-medium">Employee Profile</span>
+                            <span class="font-medium text-slate-200">Employee Profile</span>
                         </div>
                         <span class="font-mono text-[10px] text-slate-500">employee@example.com</span>
                     </button>

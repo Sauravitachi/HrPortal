@@ -105,6 +105,10 @@
     <!-- Top Navigation Bar -->
     <header class="glass-card flex h-16 shrink-0 items-center justify-between px-6 border-b border-slate-800/80 z-20">
         <div class="flex items-center gap-3">
+            <!-- Mobile Menu Toggle -->
+            <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200" title="Toggle Menu">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
             <div class="bg-gradient-to-tr from-indigo-600 to-purple-600 p-2 rounded-xl text-white shadow-md shadow-indigo-600/35">
                 <i class="fa-solid fa-people-roof text-lg"></i>
             </div>
@@ -115,8 +119,8 @@
         
         <div class="flex items-center gap-4">
             <div class="flex flex-col text-right">
-                <span class="text-xs font-semibold text-slate-300">{{ Auth::user()->name }}</span>
-                <span class="text-[10px] font-mono text-indigo-400 capitalize px-2 py-0.5 mt-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 inline-block align-middle self-end">
+                <span class="text-xs font-semibold text-slate-300 max-w-[100px] sm:max-w-[180px] truncate">{{ Auth::user()->name }}</span>
+                <span class="text-[9px] font-mono text-indigo-400 capitalize px-1.5 py-0.5 mt-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 inline-block align-middle self-end">
                     {{ str_replace('_', ' ', Auth::user()->role) }}
                 </span>
             </div>
@@ -130,10 +134,26 @@
         </div>
     </header>
 
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-1 overflow-hidden relative">
+        <!-- Backdrop overlay for mobile drawer -->
+        <div id="sidebar-backdrop" class="fixed inset-0 bg-slate-900/60 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
         <!-- Sidebar Navigation -->
-        <aside class="w-64 glass-card border-r border-slate-800/80 flex flex-col justify-between p-4 shrink-0 overflow-y-auto z-10">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 glass-card border-r border-slate-800/80 flex flex-col justify-between p-4 shrink-0 overflow-y-auto transform -translate-x-full lg:translate-x-0 lg:static lg:flex transition-transform duration-300 ease-in-out">
             <div class="space-y-6">
+                <!-- Mobile Sidebar Header with Close button -->
+                <div class="flex items-center justify-between lg:hidden pb-4 border-b border-slate-800/50">
+                    <div class="flex items-center gap-2">
+                        <div class="bg-gradient-to-tr from-indigo-600 to-purple-600 p-1.5 rounded-lg text-white">
+                            <i class="fa-solid fa-people-roof text-sm"></i>
+                        </div>
+                        <span class="text-sm font-bold text-slate-200">Navigation</span>
+                    </div>
+                    <button onclick="toggleSidebar()" class="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 transition-all duration-200" title="Close Menu">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
                 <div>
                     <span class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-3">Core Hub</span>
                     <nav class="space-y-1">
@@ -244,5 +264,14 @@
         </main>
     </div>
 
+    <!-- Toggle Drawer Script -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            sidebar.classList.toggle('-translate-x-full');
+            backdrop.classList.toggle('hidden');
+        }
+    </script>
 </body>
 </html>
