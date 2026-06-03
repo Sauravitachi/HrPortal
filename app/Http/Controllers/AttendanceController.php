@@ -87,6 +87,7 @@ class AttendanceController extends Controller
                     $status = $dayAtts->first()->status;
                 }
             }
+            
 
             $calendarDays[] = [
                 'date' => $tempDate->copy(),
